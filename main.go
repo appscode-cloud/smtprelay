@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"crypto/tls"
+	"errors"
 	"fmt"
 	"net"
 	"net/textproto"
@@ -265,8 +266,9 @@ func mailHandler(peer smtpd.Peer, env smtpd.Envelope) error {
 		if err != nil {
 			var smtpError smtpd.Error
 
-			switch err := err.(type) {
-			case *textproto.Error:
+			var err *textproto.Error
+			switch {
+			case errors.As(err, &err):
 				smtpError = smtpd.Error{Code: err.Code, Message: err.Msg}
 
 				logger.WithFields(logrus.Fields{
@@ -338,10 +340,9 @@ func getTLSConfig() *tls.Config {
 	}
 
 	return &tls.Config{
-		PreferServerCipherSuites: true,
-		MinVersion:               tls.VersionTLS12,
-		CipherSuites:             tlsCipherSuites,
-		Certificates:             []tls.Certificate{cert},
+		MinVersion:   tls.VersionTLS12,
+		CipherSuites: tlsCipherSuites,
+		Certificates: []tls.Certificate{cert},
 	}
 }
 
@@ -422,7 +423,9 @@ func main() {
 		servers = append(servers, server)
 
 		go func() {
-			server.Serve(lsnr)
+			if err := server.Serve(lsnr); err != nil {
+				logger.WithError(err).Fatal("error starting server")
+			}
 		}()
 	}
 

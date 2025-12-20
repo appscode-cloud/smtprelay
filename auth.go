@@ -22,14 +22,14 @@ func AuthLoadFile(file string) error {
 	if err != nil {
 		return err
 	}
-	f.Close()
+	f.Close() // nolint:errcheck
 
 	filename = file
 	return nil
 }
 
 func AuthReady() bool {
-	return (filename != "")
+	return filename != ""
 }
 
 // Split a string and ignore empty results
@@ -60,14 +60,14 @@ func parseLine(line string) *AuthUser {
 
 func AuthFetch(username string) (*AuthUser, error) {
 	if !AuthReady() {
-		return nil, errors.New("Authentication file not specified. Call LoadFile() first")
+		return nil, errors.New("authentication file not specified. Call LoadFile() first")
 	}
 
 	file, err := os.Open(filename)
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer file.Close() // nolint:errcheck
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
@@ -83,7 +83,7 @@ func AuthFetch(username string) (*AuthUser, error) {
 		return user, nil
 	}
 
-	return nil, errors.New("User not found")
+	return nil, errors.New("user not found")
 }
 
 func AuthCheckPassword(username string, secret string) error {
@@ -99,5 +99,5 @@ func AuthCheckPassword(username string, secret string) error {
 	if bcrypt.CompareHashAndPassword([]byte(user.passwordHash), []byte(secret)) == nil {
 		return nil
 	}
-	return errors.New("Password invalid")
+	return errors.New("password invalid")
 }

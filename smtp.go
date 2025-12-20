@@ -66,7 +66,7 @@ func NewClient(conn net.Conn, host string) (*Client, error) {
 	text := textproto.NewConn(conn)
 	_, _, err := text.ReadResponse(220)
 	if err != nil {
-		text.Close()
+		text.Close() // nolint:errcheck
 		return nil, err
 	}
 	c := &Client{Text: text, conn: conn, serverName: host, localName: *hostName}
@@ -202,12 +202,12 @@ func (c *Client) Auth(a smtp.Auth) error {
 	encoding := base64.StdEncoding
 	mech, resp, err := a.Start(&smtp.ServerInfo{Name: c.serverName, TLS: c.tls, Auth: c.auth})
 	if err != nil {
-		c.Quit()
+		c.Quit() // nolint:errcheck
 		return err
 	}
 	resp64 := make([]byte, encoding.EncodedLen(len(resp)))
 	encoding.Encode(resp64, resp)
-	code, msg64, err := c.cmd(0, strings.TrimSpace(fmt.Sprintf("AUTH %s %s", mech, resp64)))
+	code, msg64, err := c.cmd(0, "%s", strings.TrimSpace(fmt.Sprintf("AUTH %s %s", mech, resp64)))
 	for err == nil {
 		var msg []byte
 		switch code {
@@ -224,8 +224,8 @@ func (c *Client) Auth(a smtp.Auth) error {
 		}
 		if err != nil {
 			// abort the AUTH
-			c.cmd(501, "*")
-			c.Quit()
+			c.cmd(501, "*") // nolint:errcheck
+			c.Quit()        // nolint:errcheck
 			break
 		}
 		if resp == nil {
@@ -233,7 +233,7 @@ func (c *Client) Auth(a smtp.Auth) error {
 		}
 		resp64 = make([]byte, encoding.EncodedLen(len(resp)))
 		encoding.Encode(resp64, resp)
-		code, msg64, err = c.cmd(0, string(resp64))
+		code, msg64, err = c.cmd(0, "%s", string(resp64))
 	}
 	return err
 }
@@ -280,7 +280,7 @@ type dataCloser struct {
 }
 
 func (d *dataCloser) Close() error {
-	d.WriteCloser.Close()
+	d.WriteCloser.Close() // nolint:errcheck
 	_, _, err := d.c.Text.ReadResponse(250)
 	return err
 }
@@ -344,7 +344,7 @@ func SendMail(r *Remote, from string, to []string, msg []byte) error {
 		if err != nil {
 			return err
 		}
-		defer conn.Close()
+		defer conn.Close() // nolint:errcheck
 		c, err = NewClient(conn, r.Hostname)
 		if err != nil {
 			return err
@@ -357,7 +357,7 @@ func SendMail(r *Remote, from string, to []string, msg []byte) error {
 		if err != nil {
 			return err
 		}
-		defer c.Close()
+		defer c.Close() // nolint:errcheck
 		if err = c.hello(); err != nil {
 			return err
 		}
@@ -472,7 +472,7 @@ func LoginAuth(username, password string) smtp.Auth {
 	return &loginAuth{username, password}
 }
 
-func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+func (a *loginAuth) Start(*smtp.ServerInfo) (string, []byte, error) {
 	return "LOGIN", []byte{}, nil
 }
 
@@ -484,7 +484,7 @@ func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
 		case "Password:":
 			return []byte(a.password), nil
 		default:
-			return nil, errors.New("Unknown fromServer")
+			return nil, errors.New("unknown fromServer")
 		}
 	}
 	return nil, nil
