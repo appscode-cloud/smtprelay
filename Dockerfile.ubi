@@ -14,7 +14,17 @@
 
 FROM {ARG_FROM}
 
-LABEL org.opencontainers.image.source https://github.com/appscode-cloud/smtprelay
+LABEL org.opencontainers.image.source="https://github.com/appscode-cloud/smtprelay" \
+    name="ACE SMTP relay" \
+    maintainer=AppsCode \
+    vendor=AppsCode \
+    version={ARG_TAG} \
+    release={ARG_TAG} \
+    summary="ACE SMTP relay" \
+    description="ACE SMTP relay for self hosted demo deployments"
+
+RUN mkdir -p /licenses
+COPY LICENSE /licenses/
 
 ADD bin/{ARG_BIN}-{ARG_OS}-{ARG_ARCH} /{ARG_BIN}
 
