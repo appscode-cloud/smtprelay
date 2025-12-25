@@ -469,6 +469,6 @@ deploy: uninstall push install
 
 .PHONY: docker-certify-redhat
 docker-certify-redhat:
-  @preflight check container $(IMAGE):$(VERSION_UBI) \
-    --submit \
-    --certification-component-id=6947ce29702dda3239317314
+	@preflight check container $(IMAGE):$(VERSION_UBI) \
+		--submit \
+		--certification-component-id=6947ce29702dda3239317314
