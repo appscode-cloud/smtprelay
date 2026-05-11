@@ -16,7 +16,10 @@ jobs:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 1
+          fetch-tags: true
 
       - name: Print version info
         id: semver
@@ -41,7 +44,7 @@ jobs:
           make release
 
       - name: Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@26994186c0ac3ef5cae75ac16aa32e8153525f77 # v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
           files: |
